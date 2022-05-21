@@ -1,8 +1,17 @@
 from django.db import models
 
 
+class ServiceTypes(models.Model):
+    id = models.IntegerField(primary_key=True)
+    description = models.CharField(max_length=100)
+    pay_type = models.IntegerField()
+    payment_methods_supported = models.IntegerField()
+    payment_default_limits_id = models.IntegerField()
+
+
 class Payments(models.Model):
     id = models.IntegerField(primary_key=True)
+    service_type = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.id)
@@ -19,3 +28,42 @@ class Payment(models.Model):
 
     def __str__(self):
         return self.payment_identifier
+
+
+class Users(models.Model):
+    id = models.IntegerField(primary_key=True)
+    keycloak_id = models.CharField(max_length=100)
+    services = models.IntegerField()
+    email_encrypt = models.CharField(max_length=100)
+    phonenum_encrypt = models.CharField(max_length=100)
+    payment_users_limits_id = models.IntegerField()
+    joindate_time = models.DateTimeField()
+
+
+class UserPaymentLimits(models.Model):
+    id = models.OneToOneField(Users, primary_key=True, on_delete=models.CASCADE)
+    service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
+    payment_method = models.IntegerField()
+    payment_limit = models.IntegerField()
+    payment_limit_period_days = models.IntegerField()
+
+
+class Service(models.Model):
+    id = models.IntegerField(primary_key=True)
+    service_type_id = models.OneToOneField(ServiceTypes, on_delete=models.DO_NOTHING)
+    payments_id = models.ForeignKey(Payments, on_delete=models.DO_NOTHING)
+    user_encrypt = models.CharField(max_length=100)
+    pass_encrypt = models.CharField(max_length=100)
+    join_datetime = models.DateTimeField()
+    misc1 = models.CharField(max_length=100)
+    misc2 = models.CharField(max_length=100)
+
+
+class Services(models.Model):
+    id = models.IntegerField(primary_key=True)
+    service_id = models.OneToOneField(Service, on_delete=models.CASCADE)
+
+
+
+
+

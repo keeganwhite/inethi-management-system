@@ -1,5 +1,17 @@
 from rest_framework import serializers
-from .models import Payment, Payments
+from .models import *
+
+
+class ServiceTypesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceTypes
+        fields = [
+            'id',
+            'description',
+            'pay_type',
+            'payment_methods_supported',
+            'payment_default_limits_id',
+        ]
 
 
 class PaymentsSerializer(serializers.ModelSerializer):
@@ -37,3 +49,50 @@ class PaymentSerializer(serializers.ModelSerializer):
         instance.package = validated_data.get('package', instance.package)
         instance.save()
         return instance
+
+
+class UsersSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Users
+        fields = [
+            'id',
+            'keycloak_id',
+            'services',
+            'email_encrypt',
+            'phonenum_encrypt',
+            'payment_users_limits_id',
+            'joindate_time'
+        ]
+
+
+class UserPaymentLimitsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Users
+        fields = [
+            'id',
+            'service_type_id',
+            'payments_id',
+            'user_encrypt',
+            'pass_encrypt',
+            'join_datetime',
+            'misc1',
+            'misc2'
+        ]
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = [
+            'id',
+            'service_type_id',
+            'payments_id',
+            'user_encrypt',
+            'pass_encrypt',
+            'join_datetime',
+            'misc1',
+            'misc2'
+        ]
+
