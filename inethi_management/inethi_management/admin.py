@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Payment, Payments
+from .models import *
 
+admin.site.register(ServiceTypes)
 admin.site.register(Payment)
 admin.site.register(Payments)
+admin.site.register(Users)
+admin.site.register(UserPaymentLimits)
+admin.site.register(Service)
+admin.site.register(Services)
