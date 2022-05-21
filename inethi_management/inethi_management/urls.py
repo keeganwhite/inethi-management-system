@@ -16,8 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from . import views
+from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('payments', views.payment_list)
+    path('payment/', views.payment),
+    path('payment/<int:id>', views.payment_detail)
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)

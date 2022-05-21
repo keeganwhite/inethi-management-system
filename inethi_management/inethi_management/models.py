@@ -2,11 +2,14 @@ from django.db import models
 
 
 class Payments(models.Model):
-    payment_id = models.IntegerField()
+    id = models.IntegerField(primary_key=True)
+
+    def __str__(self):
+        return str(self.id)
 
 
 class Payment(models.Model):
-    payment = models.ForeignKey(Payments, on_delete=models.CASCADE)
+    payment = models.OneToOneField(Payments, on_delete=models.CASCADE, primary_key=True)
     payment_method = models.IntegerField()
     payment_identifier = models.CharField(max_length=10)
     amount = models.FloatField()
