@@ -64,6 +64,10 @@ class Services(models.Model):
     service_id = models.OneToOneField(Service, on_delete=models.CASCADE)
 
 
-
+class DefaultPaymentLimits(models.Model):
+    service_type = models.OneToOneField(ServiceTypes, on_delete=models.CASCADE)
+    payment_method = models.IntegerField()
+    payment_limit = models.IntegerField()
+    payment_limit_period_sec = models.IntegerField()
 
 
