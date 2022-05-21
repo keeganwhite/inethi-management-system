@@ -1,0 +1,8 @@
+
+.DS_Store
+
+.idea/
+
+inethi_management/data/mysql/db/
+
+inethi_management/inethi_management/migrations/
