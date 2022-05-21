@@ -13,6 +13,7 @@ class Payments(models.Model):
     id = models.IntegerField(primary_key=True)
     service_type = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
 
+
     def __str__(self):
         return str(self.id)
 
@@ -50,7 +51,7 @@ class UserPaymentLimits(models.Model):
 
 class Service(models.Model):
     id = models.IntegerField(primary_key=True)
-    service_type_id = models.OneToOneField(ServiceTypes, on_delete=models.DO_NOTHING)
+    service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.DO_NOTHING)
     payments_id = models.ForeignKey(Payments, on_delete=models.DO_NOTHING)
     user_encrypt = models.CharField(max_length=100)
     pass_encrypt = models.CharField(max_length=100)
