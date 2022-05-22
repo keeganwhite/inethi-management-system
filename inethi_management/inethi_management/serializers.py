@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics
 from .models import *
 
 
@@ -6,7 +6,6 @@ class ServiceTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceTypes
         fields = [
-            'id',
             'description',
             'pay_type',
             'payment_methods_supported',
@@ -18,7 +17,7 @@ class PaymentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payments
         fields = [
-            'id'
+            'service_type'
         ]
 
 
@@ -56,12 +55,10 @@ class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = [
-            'id',
             'keycloak_id',
             'services',
             'email_encrypt',
             'phonenum_encrypt',
-            'payment_users_limits_id',
             'joindate_time'
         ]
 
@@ -69,24 +66,20 @@ class UsersSerializer(serializers.ModelSerializer):
 class UserPaymentLimitsSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Users
+        model = UserPaymentLimits
         fields = [
-            'id',
+            'user_id',
             'service_type_id',
-            'payments_id',
-            'user_encrypt',
-            'pass_encrypt',
-            'join_datetime',
-            'misc1',
-            'misc2'
+            'payment_method',
+            'payment_limit',
+            'payment_limit_period_days',
         ]
 
 
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Users
+        model = Service
         fields = [
-            'id',
             'service_type_id',
             'payments_id',
             'user_encrypt',
@@ -96,3 +89,13 @@ class ServiceSerializer(serializers.ModelSerializer):
             'misc2'
         ]
 
+
+class DefaultPaymentLimitsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefaultPaymentLimits
+        fields = [
+            'service_type',
+            'payment_method',
+            'payment_limit',
+            'payment_limit_period_sec',
+        ]
