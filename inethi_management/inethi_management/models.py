@@ -1,41 +1,36 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+
+class PaymentMethods(models.IntegerChoices):
+    FREE = 0, _('FREE')
+    ONEFORYOU = 1, _('OneForYou')
+    CIC = 8, _('CIC')
 
 
 class ServiceTypes(models.Model):
+    class PayTypes(models.TextChoices):
+        FREE = 'FR', _('FREE')
+        PAID = 'PA', _('PAID')
+
     description = models.CharField(max_length=100)
-    pay_type = models.IntegerField()
-    payment_methods_supported = models.IntegerField()  # what is this?
+    pay_type = models.CharField(
+        max_length=2,
+        choices=PayTypes.choices,
+        default=PayTypes.FREE
+    )
+    payment_methods_supported = models.IntegerField(
+        choices=PaymentMethods.choices
+    )
 
     def __str__(self):
         return str(self.description)
 
 
-class Payments(models.Model):
-    service_type = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.service_type)
-
-
-class Payment(models.Model):
-    payment = models.ForeignKey(Payments, on_delete=models.CASCADE)
-    payment_method = models.IntegerField()
-    payment_identifier = models.CharField(max_length=10)
-    amount = models.FloatField()
-    paydate_time = models.DateTimeField()
-    service_period_sec = models.IntegerField()
-    package = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.payment_identifier
-
-
 class Users(models.Model):
-    keycloak_id = models.CharField(max_length=100, unique=True)
-    services = models.IntegerField()
-    email_encrypt = models.CharField(max_length=100)
-    phonenum_encrypt = models.CharField(max_length=100)
-    # payment_users_limits_id = models.IntegerField()
+    keycloak_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    email_encrypt = models.CharField(max_length=100, null=True, blank=True)
+    phonenum_encrypt = models.CharField(max_length=100, null=True, blank=True)
     joindate_time = models.DateTimeField()
 
     def __str__(self):
@@ -45,7 +40,9 @@ class Users(models.Model):
 class UserPaymentLimits(models.Model):
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
     service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
-    payment_method = models.IntegerField()
+    payment_method = models.IntegerField(
+        choices=PaymentMethods.choices
+    )
     payment_limit = models.IntegerField()
     payment_limit_period_days = models.IntegerField()
 
@@ -53,29 +50,38 @@ class UserPaymentLimits(models.Model):
         return str(self.user_id)
 
 
+class Payment(models.Model):
+    user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
+    payment_method = models.IntegerField(
+        choices=PaymentMethods.choices
+    )
+    amount = models.IntegerField()
+    paydate_time = models.DateTimeField()
+    service_period_sec = models.IntegerField()
+    package = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.user_id)
+
+
 class Service(models.Model):
-    service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.DO_NOTHING)
-    payments_id = models.ForeignKey(Payments, on_delete=models.DO_NOTHING)
+    user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
+    service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
     user_encrypt = models.CharField(max_length=100)
     pass_encrypt = models.CharField(max_length=100)
     join_datetime = models.DateTimeField()
-    misc1 = models.CharField(max_length=100)
-    misc2 = models.CharField(max_length=100)
+    misc1 = models.CharField(max_length=100, null=True, blank=True)
+    misc2 = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return str(self.service_type_id)
 
 
-class Services(models.Model):
-    service_id = models.OneToOneField(Service, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.service_id)
-
-
 class DefaultPaymentLimits(models.Model):
     service_type = models.OneToOneField(ServiceTypes, on_delete=models.CASCADE)
-    payment_method = models.IntegerField()
+    payment_method = models.IntegerField(
+        choices=PaymentMethods.choices
+    )
     payment_limit = models.IntegerField()
     payment_limit_period_sec = models.IntegerField()
 
