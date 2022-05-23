@@ -19,9 +19,6 @@ class ServiceTypes(models.Model):
         choices=PayTypes.choices,
         default=PayTypes.FREE
     )
-    payment_methods_supported = models.IntegerField(
-        choices=PaymentMethods.choices
-    )
 
     def __str__(self):
         return str(self.description)
@@ -78,7 +75,7 @@ class Service(models.Model):
 
 
 class DefaultPaymentLimits(models.Model):
-    service_type = models.OneToOneField(ServiceTypes, on_delete=models.CASCADE)
+    service_type = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
     payment_method = models.IntegerField(
         choices=PaymentMethods.choices
     )

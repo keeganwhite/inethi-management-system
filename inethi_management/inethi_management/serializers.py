@@ -8,7 +8,6 @@ class ServiceTypesSerializer(serializers.ModelSerializer):
         fields = [
             'description',
             'pay_type',
-            'payment_methods_supported',
         ]
 
 
