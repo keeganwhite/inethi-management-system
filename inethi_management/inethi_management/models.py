@@ -30,9 +30,6 @@ class Users(models.Model):
     phonenum_encrypt = models.CharField(max_length=100, null=True, blank=True)
     joindate_time = models.DateTimeField()
 
-    def __str__(self):
-        return str(self.keycloak_id)
-
 
 class UserPaymentLimits(models.Model):
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
@@ -55,7 +52,7 @@ class Payment(models.Model):
     amount = models.IntegerField()
     paydate_time = models.DateTimeField()
     service_period_sec = models.IntegerField()
-    package = models.CharField(max_length=100, null=True, blank=True)
+    package = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return str(self.user_id)

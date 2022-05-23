@@ -29,7 +29,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = [
             'user_id',
-            'payment_method'
+            'payment_method',
             'amount',
             'paydate_time',
             'service_period_sec',
