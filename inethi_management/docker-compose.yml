@@ -4,7 +4,7 @@ services:
   inethi-user-managament-api:
     container_name: inethi-user-managament-api
     build: .
-    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "python manage.py runserver"
     ports:
       - "8000:8000"
     depends_on:
