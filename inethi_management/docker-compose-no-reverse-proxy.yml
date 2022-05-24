@@ -9,10 +9,6 @@ services:
       - "8000:8000"
     depends_on:
       - inethi-user-managament-mysql
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`${TRAEFIK_API_RULE_DJANGO}`)"
-      - "traefik.http.routers.django.entrypoints=${TRAEFIK_ENTRYPOINT}"
 
   inethi-user-managament-mysql:
     container_name: inethi-user-managament-mysql
@@ -24,12 +20,4 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - '${DJANGO_MNT}/mysql/db:/var/lib/mysql'
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.djangomysql.entrypoints=${TRAEFIK_ENTRYPOINT}"
-
-networks:
-  default:
-    external:
-      name: "${INETHI_NETWORK}"
+      - ./data/mysql/db:/var/lib/mysql
