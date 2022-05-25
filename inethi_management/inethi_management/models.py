@@ -31,6 +31,7 @@ class Users(models.Model):
     joindate_time = models.DateTimeField()
 
 
+
 class UserPaymentLimits(models.Model):
     user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
     service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
@@ -49,6 +50,7 @@ class Payment(models.Model):
     payment_method = models.IntegerField(
         choices=PaymentMethods.choices
     )
+    service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
     amount = models.IntegerField()
     paydate_time = models.DateTimeField()
     service_period_sec = models.IntegerField()

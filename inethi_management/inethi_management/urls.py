@@ -23,7 +23,10 @@ urlpatterns = [
     path('userlimits/', views.check_payment_user_limit),
     path('defaultlimits/', views.check_payment_default_limit),
     path('purchase/', views.purchase),
-    path('userdata/', views.request_user_data)
+    path('userdata/', views.request_user_data),
+    path('registeruser/', views.register_user),
+    path('services/', views.request_services),
+    path('latestpurchase/', views.get_latest_purchase)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
