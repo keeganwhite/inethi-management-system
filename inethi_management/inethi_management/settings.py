@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-cv&vy#i38=4rv&--0utq8bzlvu(5=w^x0$&#dcrln_u*m&@zyt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+# CSRF_TRUSTED_ORIGINS = ['https://usermanagement.inethicloud.net']
 
 
 # Application definition
