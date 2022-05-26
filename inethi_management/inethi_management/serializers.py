@@ -8,7 +8,9 @@ class ServiceTypesSerializer(serializers.ModelSerializer):
         fields = [
             'description',
             'pay_type',
+            'identifier'
         ]
+
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -47,7 +49,7 @@ class UserPaymentLimitsSerializer(serializers.ModelSerializer):
             'service_type_id',
             'payment_method',
             'payment_limit',
-            'payment_limit_period_days',
+            'payment_limit_period_seconds',
         ]
 
 

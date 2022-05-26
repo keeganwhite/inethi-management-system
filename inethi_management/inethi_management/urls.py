@@ -26,7 +26,8 @@ urlpatterns = [
     path('userdata/', views.request_user_data),
     path('registeruser/', views.register_user),
     path('services/', views.request_services),
-    path('latestpurchase/', views.get_latest_purchase)
+    path('latestpurchase/', views.get_latest_purchase),
+    path('latestpurchasetimedif/', views.get_time_since_last_purchase)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

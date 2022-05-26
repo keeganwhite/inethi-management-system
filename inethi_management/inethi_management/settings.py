@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# CSRF_TRUSTED_ORIGINS = ['https://usermanagement.inethicloud.net']
+CSRF_TRUSTED_ORIGINS = ['https://usermanagement.inethicloud.net']
 
 
 # Application definition
@@ -84,8 +84,7 @@ DATABASES = {
         'NAME': 'inethi-user-managament-api',
         'USER': 'root',
         'PASSWORD': '',
-        #   'HOST': 'inethi-user-managament-mysql',
-        'HOST': '0.0.0.0',
+        'HOST': 'inethi-user-managament-mysql',
         'PORT': '3306',
     }
 }

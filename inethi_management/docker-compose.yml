@@ -4,13 +4,16 @@ services:
   inethi-user-managament-api:
     container_name: inethi-user-managament-api
     build: .
-    command: bash -c "python manage.py runserver"
+    command: bash -c "python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - inethi-user-managament-mysql
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.django.rule=Host(`${TRAEFIK_API_RULE_DJANGO}`)"
       - "traefik.http.routers.django.entrypoints=${TRAEFIK_ENTRYPOINT}"
+
+    ports:
+      - "8000:8000"
 
   inethi-user-managament-mysql:
     container_name: inethi-user-managament-mysql

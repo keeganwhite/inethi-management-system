@@ -19,6 +19,7 @@ class ServiceTypes(models.Model):
         choices=PayTypes.choices,
         default=PayTypes.FREE
     )
+    identifier = models.IntegerField()
 
     def __str__(self):
         return str(self.description)
@@ -39,7 +40,7 @@ class UserPaymentLimits(models.Model):
         choices=PaymentMethods.choices
     )
     payment_limit = models.IntegerField()
-    payment_limit_period_days = models.IntegerField()
+    payment_limit_period_seconds = models.IntegerField()
 
     def __str__(self):
         return str(self.user_id)
@@ -50,7 +51,7 @@ class Payment(models.Model):
     payment_method = models.IntegerField(
         choices=PaymentMethods.choices
     )
-    service_type_id = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
+    service_type_id = models.IntegerField()
     amount = models.IntegerField()
     paydate_time = models.DateTimeField()
     service_period_sec = models.IntegerField()
@@ -74,7 +75,7 @@ class Service(models.Model):
 
 
 class DefaultPaymentLimits(models.Model):
-    service_type = models.ForeignKey(ServiceTypes, on_delete=models.CASCADE)
+    service_type = models.IntegerField()
     payment_method = models.IntegerField(
         choices=PaymentMethods.choices
     )
