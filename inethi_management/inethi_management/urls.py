@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from . import views
 from rest_framework.urlpatterns import format_suffix_patterns
-
+# test
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('userlimits/', views.check_payment_user_limit),
@@ -25,7 +25,7 @@ urlpatterns = [
     path('purchase/', views.purchase),
     path('userdata/', views.request_user_data),
     path('registeruser/', views.register_user),
-    path('services/', views.request_services),
+    path('services/', views.request_services),  # list services
     path('latestpurchase/', views.get_latest_purchase),
     path('latestpurchasetimedif/', views.get_time_since_last_purchase)
 ]
