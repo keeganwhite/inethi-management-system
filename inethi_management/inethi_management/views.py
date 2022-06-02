@@ -168,12 +168,12 @@ def purchase(request, format=None):
                     serializer = PaymentSerializer(payment)
                     print("first if (last payment exists)")
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
-                elif delta.seconds < limit.payment_limit_period_sec:
-                    print("first elif (last payment exists)")
-                    return JsonResponse(status=400, data={'error': 'time limit exceeded'})
                 elif total_spent >= limit.payment_limit:
                     print("second elif (last payment exists)")
                     return JsonResponse(status=400, data={'error': 'payment limit exceeded'})
+                elif delta.seconds < limit.payment_limit_period_sec:
+                    print("first elif (last payment exists)")
+                    return JsonResponse(status=400, data={'error': 'time limit exceeded'})
             elif limit.payment_limit > total_spent:
                 print("first elif (last payment does not exist)")
                 print(amount)
