@@ -156,7 +156,7 @@ def purchase(request, format=None):
                 naive_payment_time = last_payment_time.replace(tzinfo=None)
                 naive_time_now = time_now.replace(tzinfo=None)
                 delta = naive_time_now - naive_payment_time  # fixes naive vs aware time
-                if delta.seconds > limit.payment_limit_period_sec and total_spent < limit.payment_limit:
+                if delta.seconds > limit.payment_limit_period_sec or total_spent < limit.payment_limit:
                     try:
                         payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
                                                          paydate_time=datetime.now(tz=pytz.UTC),
