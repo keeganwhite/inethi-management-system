@@ -8,13 +8,11 @@ class ServiceTypesSerializer(serializers.ModelSerializer):
         fields = [
             'description',
             'pay_type',
-            'identifier'
+            'service_type_id'
         ]
 
 
-
 class UsersSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Users
         fields = [
@@ -26,7 +24,6 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Payment
         fields = [
@@ -41,7 +38,6 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class UserPaymentLimitsSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = UserPaymentLimits
         fields = [
@@ -49,7 +45,7 @@ class UserPaymentLimitsSerializer(serializers.ModelSerializer):
             'service_type_id',
             'payment_method',
             'payment_limit',
-            'payment_limit_period_seconds',
+            'payment_limit_period_sec',
         ]
 
 
@@ -71,7 +67,7 @@ class DefaultPaymentLimitsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DefaultPaymentLimits
         fields = [
-            'service_type',
+            'service_type_id',
             'payment_method',
             'payment_limit',
             'payment_limit_period_sec',

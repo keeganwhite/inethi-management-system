@@ -1,5 +1,7 @@
 import json
 from _datetime import datetime
+from datetime import timedelta
+
 from django.http import JsonResponse
 from .models import *
 from .serializers import *
@@ -15,11 +17,14 @@ def check_payment_user_limit(request, format=None):
         try:
             dic = json.load(request)
             service_type = dic['service_type_id']
+            payment_method = dic["payment_method"]
             if 'phone_num' in dic:
                 phone_num = dic['phone_num']
                 try:
                     user = Users.objects.get(phonenum_encrypt=phone_num)
-                    limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type)
+                    limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type,
+                                                          payment_method=payment_method)
+
                     serializer = UserPaymentLimitsSerializer(limit)
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 except Users.DoesNotExist:
@@ -30,7 +35,8 @@ def check_payment_user_limit(request, format=None):
                 email = dic['email']
                 try:
                     user = Users.objects.get(email_encrypt=email)
-                    limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type)
+                    limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type,
+                                                          payment_method=payment_method)
                     serializer = UserPaymentLimitsSerializer(limit)
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 except Users.DoesNotExist:
@@ -41,7 +47,8 @@ def check_payment_user_limit(request, format=None):
                 keycloak_id = dic['keycloak_id']
                 try:
                     user = Users.objects.get(keycloak_id=keycloak_id)
-                    limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type)
+                    limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type,
+                                                          payment_method=payment_method)
                     serializer = UserPaymentLimitsSerializer(limit)
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 except Users.DoesNotExist:
@@ -59,7 +66,7 @@ def check_payment_default_limit(request, format=None):
             service_type = request.data['service_type']
             payment_method = request.data['payment_method']
             try:
-                limit = DefaultPaymentLimits.objects.get(service_type=service_type, payment_method=payment_method)
+                limit = DefaultPaymentLimits.objects.get(service_type_id=service_type, payment_method=payment_method)
                 serializer = DefaultPaymentLimitsSerializer(limit)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except DefaultPaymentLimits.DoesNotExist:
@@ -109,46 +116,79 @@ def purchase(request, format=None):
             else:
                 return JsonResponse(status=400, data={'error': 'no user identifier found'})
             try:
-                limit = DefaultPaymentLimits.objects.get(service_type=service_type, payment_method=payment_method)
+                limit = DefaultPaymentLimits.objects.get(service_type_id=service_type, payment_method=payment_method)
             except DefaultPaymentLimits.DoesNotExist:
                 return JsonResponse(status=404, data={'error': 'default payment limit not set'})
+            limit_user_exists = False
             try:
-                limit = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type)
+                limit_user = UserPaymentLimits.objects.get(user_id=user, service_type_id=service_type,
+                                                           payment_method=payment_method)
+                limit_user_exists = True
             except UserPaymentLimits.DoesNotExist:
                 pass  # this doesn't matter as limit would have been set above by default
+            if limit_user_exists:
+                limit = limit_user
+            total_spent = 0
+
             try:
                 last_payment = Payment.objects.filter(user_id=user, service_type_id=service_type,
                                                       payment_method=payment_method).latest('paydate_time')
             except Payment.DoesNotExist:
                 last_payment = None
+            print("The payment limit is", limit.payment_limit)
+            if last_payment is not None:
+                print("Found last payment")
+                try:
+                    start = datetime.now() - timedelta(seconds=limit.payment_limit_period_sec)
+                    latest_payments = Payment.objects.filter(
+                        paydate_time__range=[start, datetime.now(tz=pytz.utc)]).values_list('amount', flat=True)
+                    latest_payments = list(latest_payments)
+                    for payments in latest_payments:
+                        total_spent = total_spent + payments
+                except Exception as e:
+                    print(e)
+                    return JsonResponse(status=404, data={'error': 'cannot retrieve payments'})
+            total_spent = total_spent + amount
+            print("total spent", total_spent)
             if last_payment is not None:
                 last_payment_time = last_payment.paydate_time
                 time_now = datetime.now()
                 naive_payment_time = last_payment_time.replace(tzinfo=None)
                 naive_time_now = time_now.replace(tzinfo=None)
                 delta = naive_time_now - naive_payment_time  # fixes naive vs aware time
-                print(delta.seconds)
-                print(limit.payment_limit_period_sec)
-                if delta.seconds > limit.payment_limit_period_sec:
+                if delta.seconds > limit.payment_limit_period_sec and total_spent < limit.payment_limit:
                     try:
                         payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
                                                          paydate_time=datetime.now(tz=pytz.UTC),
-                                                         service_type_id=service_type, service_period_sec=service_period_sec,
+                                                         service_type_id=service_type,
+                                                         service_period_sec=service_period_sec,
                                                          package=package)
                     except Exception as e:
                         print(e)
                     serializer = PaymentSerializer(payment)
+                    print("first if (last payment exists)")
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
-                else:
+                elif delta.seconds < limit.payment_limit_period_sec:
+                    print("first elif (last payment exists)")
+                    return JsonResponse(status=400, data={'error': 'time limit exceeded'})
+                elif total_spent > limit.payment_limit:
+                    print("second elif (last payment exists)")
                     return JsonResponse(status=400, data={'error': 'payment limit exceeded'})
-            else:
+            elif limit.payment_limit > total_spent:
+                print("first elif (last payment does not exist)")
+                print(amount)
                 payment = Payment.objects.create(user_id=user, payment_method=payment_method,
                                                  amount=amount,
-                                                 paydate_time=datetime.now(tz=pytz.UTC), service_period_sec=service_period_sec,
+                                                 paydate_time=datetime.now(tz=pytz.UTC),
+                                                 service_period_sec=service_period_sec,
                                                  service_type_id=service_type, package=package)
                 serializer = PaymentSerializer(payment)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except:
+
+            return JsonResponse(status=400, data={'error': 'payment limit exceeded'})
+
+        except Exception as e:
+            print(e)
             return JsonResponse(status=400, data={'error': 'incorrectly formatted request'})
 
 
@@ -171,19 +211,20 @@ def request_user_data(request, format=None):
 def register_user(request, format=None):
     if request.method == 'POST':
         dic = json.load(request)
+        print(dic)
         if 'phone_num' in dic:
             phone_num = dic['phone_num']
-            user = Users.objects.create(phonenum_encrypt=phone_num, joindate_time=datetime.now())
+            user = Users.objects.create(phonenum_encrypt=phone_num, joindate_time=datetime.now(tz=pytz.UTC))
             serializer = UsersSerializer(user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif 'email' in dic:
             email = dic['email']
-            user = Users.objects.create(email_encrypt=email, email=datetime.now())
+            user = Users.objects.create(email_encrypt=email, email=datetime.now(tz=pytz.UTC))
             serializer = UsersSerializer(user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif 'keycloak_id' in dic:
             keycloak_id = dic['keycloak_id']
-            user = Users.objects.create(keycloak_id=keycloak_id, joindate_time=datetime.now())
+            user = Users.objects.create(keycloak_id=keycloak_id, joindate_time=datetime.now(tz=pytz.UTC))
             serializer = UsersSerializer(user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -211,8 +252,8 @@ def get_latest_purchase(request, format=None):
                                                     payment_method=payment_method).latest('paydate_time')
             serializer = PaymentSerializer(latest_payment)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except DefaultPaymentLimits.DoesNotExist:
-            return JsonResponse(status=404, data={'error': 'default payment method is not set'})
+        except Payment.DoesNotExist:
+            return JsonResponse(status=404, data={'error': 'no payments found'})
 
 
 @api_view(['GET'])
@@ -236,3 +277,20 @@ def get_time_since_last_purchase(request, format=None):
         naive_time_now = time_now.replace(tzinfo=None)
         delta = naive_time_now - naive_payment_time  # fixes naive vs aware time
         return JsonResponse(status=200, data={'time_difference': delta.seconds})
+
+
+@api_view(['GET'])
+def get_last_payments_by_time_period(request, format=None):
+    if request.method == 'GET':
+        try:
+            dic = json.load(request)
+            payment_limit_period_sec = dic["payment_limit_period_sec"]
+            start = datetime.now() - timedelta(seconds=payment_limit_period_sec)
+            latest_payments = Payment.objects.filter(
+                paydate_time__range=[start, datetime.now(tz=pytz.utc)]).values_list('amount', flat=True)
+            latest_payments = list(latest_payments)
+            print(latest_payments)
+            return JsonResponse(status=200, data=latest_payments, safe=False)
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
