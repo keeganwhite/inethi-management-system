@@ -1,11 +1,18 @@
 import React from 'react';
+import {Link} from "react-router-dom";
 
 
 const Home = () => {
 
  return (
-   <div>
-     <h1 className="text-green-800 text-4xl">Welcome to the Homepage</h1>
+
+   <div className="navbar">
+        <Link to="/purchase">
+            <button>Make a Purchase</button></Link>
+       <Link to="/purchasehistory">
+            <button>See my Purchase History</button></Link>
+
+
    </div>
  );
 };

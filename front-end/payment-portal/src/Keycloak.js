@@ -5,4 +5,4 @@ const keycloak = new Keycloak({
  clientId: "paymentportal.inethicloud.net",
 });
 
-export default keycloak;
+export default keycloak

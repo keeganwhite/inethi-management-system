@@ -156,7 +156,7 @@ def purchase(request, format=None):
                 naive_payment_time = last_payment_time.replace(tzinfo=None)
                 naive_time_now = time_now.replace(tzinfo=None)
                 delta = naive_time_now - naive_payment_time  # fixes naive vs aware time
-                if delta.seconds > limit.payment_limit_period_sec or total_spent < limit.payment_limit:
+                if delta.seconds > limit.payment_limit_period_sec or total_spent <= limit.payment_limit:
                     try:
                         payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
                                                          paydate_time=datetime.now(tz=pytz.UTC),
@@ -170,11 +170,11 @@ def purchase(request, format=None):
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
                 elif total_spent >= limit.payment_limit:
                     print("second elif (last payment exists)")
-                    return JsonResponse(status=400, data={'error': 'payment limit exceeded'})
-                elif delta.seconds < limit.payment_limit_period_sec:
+                    return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window'})  # TODO add time remaining
+                elif delta.seconds < limit.payment_limit_period_sec:  # TODO test removing this
                     print("first elif (last payment exists)")
                     return JsonResponse(status=400, data={'error': 'time limit exceeded'})
-            elif limit.payment_limit > total_spent:
+            elif limit.payment_limit >= total_spent:
                 print("first elif (last payment does not exist)")
                 print(amount)
                 payment = Payment.objects.create(user_id=user, payment_method=payment_method,
@@ -185,7 +185,7 @@ def purchase(request, format=None):
                 serializer = PaymentSerializer(payment)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            return JsonResponse(status=400, data={'error': 'payment limit exceeded'})
+            return JsonResponse(status=400, data={'error': 'payment limit exceeded'})  # TODO add payment limit
 
         except Exception as e:
             print(e)
