@@ -200,8 +200,8 @@ def purchase(request, format=None):
                                                      package=package)
                 serializer = PaymentSerializer(payment)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window', 'amount_spent': int(total_spent-amount)})  # TODO add payment limit
+            remaining_time = int(limit.payment_limit_period_sec)
+            return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window', 'time_left': remaining_time, 'payment_limit': limit.payment_limit, 'amount_spent': int(total_spent-amount)})  # TODO add payment limit
 
         except Exception as e:
             print(e)
