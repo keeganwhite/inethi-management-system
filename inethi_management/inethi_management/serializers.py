@@ -33,7 +33,9 @@ class PaymentSerializer(serializers.ModelSerializer):
             'paydate_time',
             'service_type_id',
             'service_period_sec',
-            'package'
+            'package',
+            'voucher'
+
         ]
 
 

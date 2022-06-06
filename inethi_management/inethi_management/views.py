@@ -86,6 +86,7 @@ def purchase(request, format=None):
     """
     if request.method == 'POST':
         try:
+            voucher = False
             dic = json.load(request)
             payment_method = dic['payment_method']  # int indicating payment method (type)
             amount = dic['amount']
@@ -129,7 +130,8 @@ def purchase(request, format=None):
             if limit_user_exists:
                 limit = limit_user
             total_spent = 0
-
+            if service_type == 1:
+                voucher = True
             try:
                 last_payment = Payment.objects.filter(user_id=user, service_type_id=service_type,
                                                       payment_method=payment_method).latest('paydate_time')
@@ -158,11 +160,19 @@ def purchase(request, format=None):
                 delta = naive_time_now - naive_payment_time  # fixes naive vs aware time
                 if delta.seconds > limit.payment_limit_period_sec or total_spent <= limit.payment_limit:
                     try:
-                        payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
-                                                         paydate_time=datetime.now(tz=pytz.UTC),
-                                                         service_type_id=service_type,
-                                                         service_period_sec=service_period_sec,
-                                                         package=package)
+                        if voucher:
+                            payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
+                                                             paydate_time=datetime.now(tz=pytz.UTC),
+                                                             service_type_id=service_type,
+                                                             service_period_sec=service_period_sec,
+                                                             package=package,
+                                                             voucher='dummydata')
+                        else:
+                            payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
+                                                             paydate_time=datetime.now(tz=pytz.UTC),
+                                                             service_type_id=service_type,
+                                                             service_period_sec=service_period_sec,
+                                                             package=package)
                     except Exception as e:
                         print(e)
                     serializer = PaymentSerializer(payment)
@@ -170,18 +180,24 @@ def purchase(request, format=None):
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
                 elif total_spent >= limit.payment_limit:
                     print("second elif (last payment exists)")
-                    return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window'})  # TODO add time remaining
-                elif delta.seconds < limit.payment_limit_period_sec:  # TODO test removing this
-                    print("first elif (last payment exists)")
-                    return JsonResponse(status=400, data={'error': 'time limit exceeded'})
+                    remaining_time = int(limit.payment_limit_period_sec) - int(delta.seconds)
+                    return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window', 'time_left': remaining_time, 'payment_limit': limit.payment_limit, 'amount_spent': int(total_spent-amount)})
             elif limit.payment_limit >= total_spent:
                 print("first elif (last payment does not exist)")
                 print(amount)
-                payment = Payment.objects.create(user_id=user, payment_method=payment_method,
-                                                 amount=amount,
-                                                 paydate_time=datetime.now(tz=pytz.UTC),
-                                                 service_period_sec=service_period_sec,
-                                                 service_type_id=service_type, package=package)
+                if voucher:
+                    payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
+                                                     paydate_time=datetime.now(tz=pytz.UTC),
+                                                     service_type_id=service_type,
+                                                     service_period_sec=service_period_sec,
+                                                     package=package,
+                                                     voucher='dummydata')
+                else:
+                    payment = Payment.objects.create(user_id=user, payment_method=payment_method, amount=amount,
+                                                     paydate_time=datetime.now(tz=pytz.UTC),
+                                                     service_type_id=service_type,
+                                                     service_period_sec=service_period_sec,
+                                                     package=package)
                 serializer = PaymentSerializer(payment)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -214,19 +230,31 @@ def register_user(request, format=None):
         print(dic)
         if 'phone_num' in dic:
             phone_num = dic['phone_num']
-            user = Users.objects.create(phonenum_encrypt=phone_num, joindate_time=datetime.now(tz=pytz.UTC))
-            serializer = UsersSerializer(user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                user = Users.objects.get(phonenum_encrypt=phone_num)
+                return JsonResponse(status=400, data={'error': 'user already exists'})
+            except Users.DoesNotExist:
+                user = Users.objects.create(phonenum_encrypt=phone_num, joindate_time=datetime.now(tz=pytz.UTC))
+                serializer = UsersSerializer(user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif 'email' in dic:
             email = dic['email']
-            user = Users.objects.create(email_encrypt=email, email=datetime.now(tz=pytz.UTC))
-            serializer = UsersSerializer(user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                user = Users.objects.get(email_encrypt=email)
+                return JsonResponse(status=400, data={'error': 'user already exists'})
+            except Users.DoesNotExist:
+                user = Users.objects.create(email_encrypt=email, joindate_time=datetime.now(tz=pytz.UTC))
+                serializer = UsersSerializer(user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif 'keycloak_id' in dic:
             keycloak_id = dic['keycloak_id']
-            user = Users.objects.create(keycloak_id=keycloak_id, joindate_time=datetime.now(tz=pytz.UTC))
-            serializer = UsersSerializer(user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                user = Users.objects.get(keycloak_id=keycloak_id)
+                return JsonResponse(status=400, data={'error': 'user already exists'})
+            except Users.DoesNotExist:
+                user = Users.objects.create(phonenum_encrypt=keycloak_id, joindate_time=datetime.now(tz=pytz.UTC))
+                serializer = UsersSerializer(user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return JsonResponse(status=400, data={'error': 'no user identifier found'})
 

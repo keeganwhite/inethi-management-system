@@ -55,6 +55,7 @@ class Payment(models.Model):
     paydate_time = models.DateTimeField()
     service_period_sec = models.IntegerField()
     package = models.CharField(max_length=100, null=True)
+    voucher = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return str(self.user_id)
