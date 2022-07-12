@@ -89,7 +89,7 @@ def purchase(request, format=None):
             voucher = False
             dic = json.load(request)
             payment_method = dic['payment_method']  # int indicating payment method (type)
-            amount = dic['amount']
+            amount = int(dic['amount'])
             service_period_sec = dic['service_period_sec']
             package = dic['package']  # description of service
             service_type = dic['service_type_id']  # registered service IDs
@@ -319,6 +319,40 @@ def get_last_payments_by_time_period(request, format=None):
             latest_payments = list(latest_payments)
             print(latest_payments)
             return JsonResponse(status=200, data=latest_payments, safe=False)
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_user_payments(request, format=None):
+    if request.method == 'GET':
+        try:
+            dic = json.load(request)
+            if 'phone_num' in dic:
+                phone_num = dic['phone_num']
+                try:
+                    user = Users.objects.get(phonenum_encrypt=phone_num)
+                except Users.DoesNotExist:
+                    return JsonResponse(status=400, data={'error': 'no user found'})
+            elif 'email' in dic:
+                email = dic['email']
+                try:
+                    user = Users.objects.get(email_encrypt=email)
+                except Users.DoesNotExist:
+                    return JsonResponse(status=400, data={'error': 'no user found'})
+            elif 'keycloak_id' in dic:
+                keycloak_id = dic['keycloak_id']
+                try:
+                    user = Users.objects.get(keycloak_id=keycloak_id)
+                except Users.DoesNotExist:
+                    return JsonResponse(status=400, data={'error': 'no user found'})
+            else:
+                return JsonResponse(status=400, data={'error': 'no user identifier found'})
+            latest_payments = Payment.objects.filter(user_id=user)
+            serializer = PaymentSerializer(latest_payments, many=True)
+            # latest_payments = list(serializer)
+            # print(latest_payments)
+            return JsonResponse(status=200, data=serializer.data, safe=False)
         except Exception as e:
             print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
