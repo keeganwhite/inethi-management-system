@@ -13,7 +13,7 @@ const PurchaseHistory = () => {
     useEffect(() => {
 
         console.log(JSON.stringify(keycloak_id))
-        fetch('http://0.0.0.0:8000/getuserpayments/'+keycloak_id, {
+        fetch('https://usermanagement.inethicloud.net/getuserpayments/'+keycloak_id, {
             method: 'GET',
         }, []).then(response => response.json())
             .then(data => {console.log(data)

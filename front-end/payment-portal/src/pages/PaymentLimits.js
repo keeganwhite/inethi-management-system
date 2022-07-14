@@ -10,13 +10,13 @@ const PaymentLimits = () => {
 
     useEffect(() => {
 
-         fetch('http://0.0.0.0:8000/getdefaultlimits/', {
+         fetch('https://usermanagement.inethicloud.net/getdefaultlimits/', {
             method: 'GET',
         }, []).then(response => response.json())
             .then(data => {console.log(data)
             setServiceLimits(data)})
 
-        fetch('http://0.0.0.0:8000/getuserlimits/'+keycloak_id, {
+        fetch('https://usermanagement.inethicloud.net/getuserlimits/'+keycloak_id, {
             method: 'GET',
         }, []).then(response => response.json())
             .then(data => {console.log(data)

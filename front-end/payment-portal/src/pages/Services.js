@@ -6,7 +6,7 @@ const Services = () => {
     const [services, setServices] = useState([]);
 
     useEffect(() => {
-        fetch('http://0.0.0.0:8000/services/', {
+        fetch('https://usermanagement.inethicloud.net/services/', {
             method: 'GET',
         }, []).then(response => response.json())
             .then(data => {console.log(data)
