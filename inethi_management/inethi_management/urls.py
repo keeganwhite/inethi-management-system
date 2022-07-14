@@ -29,7 +29,10 @@ urlpatterns = [
     path('latestpurchase/', views.get_latest_purchase),
     path('latestpurchasetimedif/', views.get_time_since_last_purchase),
     path('latestpurchases/', views.get_last_payments_by_time_period),
-    path('getuserpayments', views.get_user_payments)
+    path('getuserpayments/<str:user>', views.get_user_payments),
+    path('getdefaultlimits/', views.get_default_limits),
+    path('getuserlimits/<str:user>', views.check_payment_user_limit)
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -6,6 +6,11 @@
   font-family: "Quicksand";
   color: #333;
 }
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
 .navbar {
   padding: 20px;
   display: flex;

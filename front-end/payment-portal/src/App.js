@@ -3,10 +3,13 @@ import { ReactKeycloakProvider } from "@react-keycloak/web";
 import keycloak from "./Keycloak";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Nav from "./components/Nav";
-import WelcomePage from "./pages/Homepage";
+import Homepage from "./pages/Homepage";
 import Create from "./Create";
 import PrivateRoute from "./helpers/PrivateRoute";
 import PurchaseHistory from "./pages/PurchaseHistory";
+import Services from "./pages/Services";
+import PaymentLimits from "./pages/PaymentLimits";
+
 const Loading = () => <div>Loading...</div>
 function App() {
  return (
@@ -19,11 +22,18 @@ function App() {
             }}
         LoadingComponent={<Loading />}
         >
+
        <Nav />
           <div className="content">
        <BrowserRouter>
          <Routes>
-           <Route exact path="/" element={<WelcomePage />} />
+           <Route exact path="/" element={<PrivateRoute><Homepage /></PrivateRoute>} />
+            <Route
+             path="/services"
+             element={
+               <Services />
+             }
+           />
            <Route
              path="/purchase"
              element={
@@ -40,10 +50,22 @@ function App() {
                </PrivateRoute>
              }
            />
+             <Route
+             path="/paymentlimits"
+             element={
+               <PrivateRoute>
+                 <PaymentLimits />
+               </PrivateRoute>
+             }
+           />
          </Routes>
+
+
        </BrowserRouter>
+
               </div>
      </ReactKeycloakProvider>
+
    </div>
  );
 }

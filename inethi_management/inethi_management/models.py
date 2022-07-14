@@ -4,8 +4,11 @@ from django.utils.translation import gettext_lazy as _
 
 class PaymentMethods(models.IntegerChoices):
     FREE = 0, _('FREE')
-    ONEFORYOU = 1, _('OneForYou')
-    CIC = 8, _('CIC')
+    CASH = 1, _('Cash')
+    ONEFORYOU = 2, _('One4You')
+    CIC = 4, _('CIC')
+    PAYPAL = 8, _('Paypal')
+    CREDITCARD = 16, _('Credit Card')
 
 
 class ServiceTypes(models.Model):

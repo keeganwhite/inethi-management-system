@@ -181,7 +181,10 @@ def purchase(request, format=None):
                 elif total_spent >= limit.payment_limit:
                     print("second elif (last payment exists)")
                     remaining_time = int(limit.payment_limit_period_sec) - int(delta.seconds)
-                    return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window', 'time_left': remaining_time, 'payment_limit': limit.payment_limit, 'amount_spent': int(total_spent-amount)})
+                    return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window',
+                                                          'time_left': remaining_time,
+                                                          'payment_limit': limit.payment_limit,
+                                                          'amount_spent': int(total_spent - amount)})
             elif limit.payment_limit >= total_spent:
                 print("first elif (last payment does not exist)")
                 print(amount)
@@ -201,7 +204,10 @@ def purchase(request, format=None):
                 serializer = PaymentSerializer(payment)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             remaining_time = int(limit.payment_limit_period_sec)
-            return JsonResponse(status=400, data={'error': 'payment limit exceeded in time window', 'time_left': remaining_time, 'payment_limit': limit.payment_limit, 'amount_spent': int(total_spent-amount)})  # TODO add payment limit
+            return JsonResponse(status=400,
+                                data={'error': 'payment limit exceeded in time window', 'time_left': remaining_time,
+                                      'payment_limit': limit.payment_limit,
+                                      'amount_spent': int(total_spent - amount)})  # TODO add payment limit
 
         except Exception as e:
             print(e)
@@ -323,31 +329,16 @@ def get_last_payments_by_time_period(request, format=None):
             print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET'])
-def get_user_payments(request, format=None):
+def get_user_payments(request, user):
     if request.method == 'GET':
+        keycloak_id = user
         try:
-            dic = json.load(request)
-            if 'phone_num' in dic:
-                phone_num = dic['phone_num']
-                try:
-                    user = Users.objects.get(phonenum_encrypt=phone_num)
-                except Users.DoesNotExist:
-                    return JsonResponse(status=400, data={'error': 'no user found'})
-            elif 'email' in dic:
-                email = dic['email']
-                try:
-                    user = Users.objects.get(email_encrypt=email)
-                except Users.DoesNotExist:
-                    return JsonResponse(status=400, data={'error': 'no user found'})
-            elif 'keycloak_id' in dic:
-                keycloak_id = dic['keycloak_id']
-                try:
-                    user = Users.objects.get(keycloak_id=keycloak_id)
-                except Users.DoesNotExist:
-                    return JsonResponse(status=400, data={'error': 'no user found'})
-            else:
-                return JsonResponse(status=400, data={'error': 'no user identifier found'})
+            try:
+                user = Users.objects.get(keycloak_id=keycloak_id)
+            except Users.DoesNotExist:
+                return JsonResponse(status=400, data={'error': 'no user found'})
             latest_payments = Payment.objects.filter(user_id=user)
             serializer = PaymentSerializer(latest_payments, many=True)
             # latest_payments = list(serializer)
@@ -356,3 +347,33 @@ def get_user_payments(request, format=None):
         except Exception as e:
             print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def get_default_limits(request, format=None):
+    if request.method == 'GET':
+        try:
+            try:
+                limit = DefaultPaymentLimits.objects.filter()
+                serializer = DefaultPaymentLimitsSerializer(limit, many=True)
+                return JsonResponse(data=serializer.data, status=status.HTTP_200_OK, safe=False)
+            except DefaultPaymentLimits.DoesNotExist:
+                return JsonResponse(status=404, data={'error': 'default payment limits not set'})
+        except Exception as e:
+            print(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def check_payment_user_limit(request, user):
+    if request.method == 'GET':
+        keycloak_id = user
+        try:
+            user = Users.objects.get(keycloak_id=keycloak_id)
+            limit = UserPaymentLimits.objects.filter(user_id=user)
+            serializer = UserPaymentLimitsSerializer(limit, many=True)
+            return JsonResponse(serializer.data, status=status.HTTP_200_OK, safe=False)
+        except Users.DoesNotExist:
+            return JsonResponse(status=400, data={'error': 'no user found'})
+        except UserPaymentLimits.DoesNotExist:
+            return JsonResponse(status=404, data={'error': 'user payment limit not set'})
