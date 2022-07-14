@@ -87,7 +87,7 @@ DATABASES = {
         'PASSWORD': '',
         # 'HOST': '0.0.0.0',
         'HOST': 'inethi-user-managament-mysql',
-        'PORT': '3000',
+        'PORT': '3306',
     }
 }
 
